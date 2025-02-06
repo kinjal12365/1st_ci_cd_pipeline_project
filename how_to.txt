@@ -1,0 +1,114 @@
+In this i am going to talk about how we can use github action for complete cicd usecase
+
+firstly we have to create a directory in this format ->{ .github/workflows } after this then we have to create the yml file 
+
+now lets start about how we will be creating the yml file so that cicd can happen
+
+name: at first we will be giving a name to the whole cicd action
+
+on: we will be using this keyword to specify when the action will trigger ie upon what action performed on git this process will start
+we can define that it can happen on pullrequest , push etc , given down is a code snippet
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+* so here we are describing that when a push or a pull_request is done on the main repository then the action will be triggered
+
+jobs: now we will be discussing about jobs ie this is used to define the job name , the running env on which it will run .
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+note we can create multiple jobs and we can also create multiple tasks in a job
+
+now will be creating tasks using the steps keyword
+in this format
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest
+
+here is an example of it we can use different keywords like - use,run,name,with 
+use - for performing a githubactions predefined usecase
+run - for running a certain command on command prompt
+name - for name of the task in a step
+with - which language or the things we will be needing for running the action
+
+build-and-publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and publish Docker image
+        id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/cicd-flasktest-app:latest
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+ # so here we can see i have created another job and in this we have used the github actions inbuilt usecase for docker and for dockerhub
+
+ so as we can se we have used the needs keyword which is used for a situation in which the job given in the needs , should be completed before
+ the starting of the present job
+
+ we have also used docker buildx func from github actions to build the image and login action to login to dockerhub 
+ then i have used docker user name and passkey which i created in dockerhub website account settings then pasted it in the secret section of github action
+
+
+ name: Build and publish Docker image
+        id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/cicd-flasktest-app:latest
+
+ finally in this part i have build and publish the docker image using actions and i have used with keyword and given context from the local directory
+given the docker file name and location , given push = True and used tags to give the docker image a proper naming convention before pushing it
+to the docker hub repository
+
+ name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+and finally performed the digest of the output provided by the second function
+
+and its done.
+Thank you for reading
+
