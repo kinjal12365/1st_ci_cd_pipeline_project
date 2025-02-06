@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: 3.9
 
       - name: Install dependencies
         run: |
@@ -43,6 +43,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and publish Docker image
+        id: docker_build
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -51,5 +52,4 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/cicd-flasktest-app:latest
 
       - name: Image digest
-        run: echo ${{ steps.build-and-publish.outputs.digest }}
-
+        run: echo ${{ steps.docker_build.outputs.digest }}
